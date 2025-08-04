@@ -1,0 +1,5 @@
+__pycache__/
+app/__pycache__/
+cloudflared.deb
+media_library/*
+!media_library/.keep

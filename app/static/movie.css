@@ -1,0 +1,157 @@
+/* Base Reset */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+html, body {
+  height: 100%;
+  background-color: #000;
+  color: #ddd;
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  overflow: hidden;
+}
+
+/* Body layout - full screen flex container */
+body {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  height: 100vh;
+  width: 100vw;
+  background-color: #000;
+  position: relative;
+}
+
+/* Back Button - subtle and clean */
+#backBtn {
+  position: fixed;
+  top: 24px;
+  left: 24px;
+  background: rgba(0, 0, 0, 0.4);
+  color: #eee;
+  padding: 8px 14px;
+  border: none;
+  border-radius: 6px;
+  font-size: 16px;
+  cursor: pointer;
+  backdrop-filter: blur(8px);
+  transition: background-color 0.3s ease;
+  z-index: 1000;
+}
+
+#backBtn:hover {
+  background: rgba(255, 255, 255, 0.15);
+}
+
+/* Video Player - full viewport, no border radius */
+video#player {
+  width: 100vw;
+  object-fit: cover;
+  outline: none;
+  background: black;
+  user-select: none;
+}
+
+/* Controls container - overlay at bottom with blur */
+#controls {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  width: 100vw;
+  padding: 12px 24px;
+  background: rgba(0, 0, 0, 0.6);
+  backdrop-filter: blur(10px);
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  z-index: 1000;
+}
+
+/* Control groups for layout */
+.control-group {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.control-group.left,
+.control-group.right {
+  flex-shrink: 0;
+}
+
+.control-group.center {
+  flex-grow: 1;
+}
+
+/* Buttons - minimal and subtle */
+button.control-btn {
+  background: transparent;
+  color: #ddd;
+  border: none;
+  padding: 6px 12px;
+  border-radius: 4px;
+  font-size: 14px;
+  cursor: pointer;
+  transition: background-color 0.25s ease, color 0.25s ease;
+  user-select: none;
+}
+
+button.control-btn:hover,
+button.control-btn:focus {
+  background: #222;
+  color: #55aaff;
+  outline: none;
+}
+
+/* Progress bar container */
+#progress-container {
+  flex-grow: 1;
+  height: 6px;
+  background: rgba(255, 255, 255, 0.15);
+  border-radius: 3px;
+  cursor: pointer;
+  position: relative;
+  min-width: 200px;
+  margin: 0 12px;
+  user-select: none;
+}
+
+/* Progress bar itself */
+#progress {
+  height: 100%;
+  background: #55aaff;
+  width: 0%;
+  border-radius: 3px;
+  transition: width 0.2s ease;
+}
+
+/* Responsive tweaks */
+@media (max-width: 768px) {
+  #controls {
+    padding: 10px 16px;
+    gap: 12px;
+  }
+
+  button.control-btn {
+    padding: 8px 10px;
+    font-size: 13px;
+  }
+
+  #progress-container {
+    min-width: 120px;
+  }
+}
+
+.hide-ui {
+  opacity: 0;
+  transition: opacity 0.5s ease;
+  pointer-events: none;
+}
+
+#backBtn,
+#controls {
+  transition: opacity 0.5s ease;
+}
