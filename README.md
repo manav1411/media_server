@@ -16,9 +16,12 @@ if running into error of movies stuck in requested section, add 'session["search
 
 
 things to fix:
-1. mae download bar green, not blue.
-2. clicking on any part of the card (not just poster), like name, should open movie.
-3. remove little white divider between poster and rest of card.
-4. movie request bar is at bottom, but there should be no scroll bar (its scrolling a little it)
-5. make sure movie doesn't show up in ready to watch, maybe check and only list those who have subtitle.vtt
-6. when person wants to reload, why is "Are you sure you want to send a form again?" showing up? fix.
+1. clicking on any part of the card (not just poster), like name, should open movie.
+2. when person wants to reload, why is "Are you sure you want to send a form again?" showing up? fix.
+3. make it mobile-friendly
+3. delay in watched movie bar
+4. search for Dune Part Two doesn't work for some reason...
+5. if torrent gives mkv, convert to mp4
+5. (not implementing) tv show support
+6. (not implementing) searching for movies in library (will be a small library)
+4. (not implementing) advanced filtering like genre, etc, description, etc. from timdb - need metadata file for each movie. also trailers, cast, etc like netflix.

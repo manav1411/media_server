@@ -1,10 +1,10 @@
-import os
-import json
 from dotenv import load_dotenv
-import requests
-import subprocess
-import shutil
 from flask import current_app
+import subprocess
+import requests
+import shutil
+import json
+import os
 
 load_dotenv(dotenv_path="/home/manavpi/home_server/.env")
 OPENSUBTITLES_API_KEY = os.getenv("OPENSUBTITLES_API_KEY")
@@ -134,7 +134,7 @@ def finalize_movie_folder(base_path):
 
 
 # helper function to download poster
-def download_poster(tmdb_id, save_path):
+def download_poster_and_metadata(tmdb_id, save_path):
     headers = {"Authorization": f"Bearer {TMDB_API_KEY}"}
     url = f"https://api.themoviedb.org/3/movie/{tmdb_id}"
     r = requests.get(url, headers=headers)
@@ -145,6 +145,26 @@ def download_poster(tmdb_id, save_path):
 
     data = r.json()
     poster_path = data.get("poster_path")
+
+    # Save metadata
+    metadata = {
+        "title": data.get("title"),
+        "overview": data.get("overview"),
+        "release_date": data.get("release_date"),
+        "genres": [genre["name"] for genre in data.get("genres", [])],
+        "runtime": data.get("runtime"),
+        "rating": data.get("vote_average"),
+        "poster_path": poster_path,  # optional, in case you want to cache URLs too
+        "tmdb_id": tmdb_id
+    }
+
+    metadata_file_path = os.path.join(save_path, "metadata.json")
+    try:
+        with open(metadata_file_path, "w", encoding="utf-8") as f:
+            json.dump(metadata, f, ensure_ascii=False, indent=4)
+    except Exception as e:
+        current_app.logger.error(f"Failed to write metadata.json: {e}")
+        return False
 
     if not poster_path:
         current_app.logger.warning(f"No poster path for TMDb ID {tmdb_id}")

@@ -1,25 +1,46 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <link rel="stylesheet" href="{{ url_for('static', filename='global.css') }}?ver=11">
+    <link rel="stylesheet" href="{{ url_for('static', filename='global.css') }}?v=7">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Home</title>
 </head>
 <body>
   <div class="main-container">
-    <h1>Welcome, {{ user_email }}</h1>
+    <h1 id="greeting"></h1>
 
-    <div class="movies">
-      {% for movie in movies %}
-      <div class="movie">
-        <a href="/movie/{{ movie.name }}">
-          <img src="{{ movie.poster }}" alt="Poster for {{ movie.name }}">
-        </a>
-        <div class="progress-container" data-movie="{{ movie.name }}" data-seconds="{{ movie.progress_seconds }}">
-          <div class="progress-bar"></div>
+    <div class="movies-wrapper">
+      <div class="movies">
+        {% for movie in movies %}
+        <div class="movie-block">
+          <div class="movie" tabindex="0" aria-expanded="false" data-movie="{{ movie.name }}">
+            <a href="/movie/{{ movie.name }}">
+              <img src="{{ movie.poster }}" alt="Poster for {{ movie.title }}">
+            </a>
+            <div class="progress-container" data-movie="{{ movie.name }}" data-seconds="{{ movie.progress_seconds }}">
+              <div class="progress-bar"></div>
+            </div>
+          </div>
+
+          <div class="movie-info" data-movie="{{ movie.name }}">
+            <div class="title-year">{{ movie.title }} ({{ movie.year }})</div>
+
+            <div class="genres">
+              {% for genre in movie.genres %}
+                <span class="genre">{{ genre }}</span>
+              {% endfor %}
+            </div>
+
+            <div class="runtime-rating">
+              <span class="runtime">{{ movie.runtime }} min</span> ·
+              <span class="rating">⭐ {{ (movie.rating + 0.35) | round(1) }}</span>
+            </div>
+
+            <p class="overview">{{ movie.overview }}</p>
+          </div>
         </div>
-        <div class="movie-title">{{ movie.name }}</div>
+        {% endfor %}
       </div>
-      {% endfor %}
     </div>
 
     <!-- EXISTING TMDb SEARCH (your current search and results) -->
@@ -100,6 +121,20 @@
 
         dummy.load();
     });
+  </script>
+
+  <script>
+    const name = "{{ user_name }}";
+    const hour = new Date().getHours();
+    const avatars = ['🎬', '🍿', '🎥', '🌌', '🛸', '🤖', '🧙‍♂️'];
+    const randomAvatar = avatars[Math.floor(Math.random() * avatars.length)];
+
+    let timeOfDay = "Hello";
+    if (hour < 12) timeOfDay = "Good morning";
+    else if (hour < 18) timeOfDay = "Good afternoon";
+    else timeOfDay = "Good evening";
+
+    document.getElementById("greeting").textContent = `${timeOfDay}, ${name} ${randomAvatar}`;
   </script>
 
   <script>
@@ -207,6 +242,20 @@
       }, 3000);
     }
   });
+  </script>
+
+  <script>
+    document.querySelectorAll(".movie").forEach(movieDiv => {
+      movieDiv.addEventListener("click", () => {
+        const expanded = movieDiv.getAttribute("aria-expanded") === "true";
+        movieDiv.setAttribute("aria-expanded", expanded ? "false" : "true");
+        
+        // Optionally, scroll into view when expanded
+        if (!expanded) {
+          movieDiv.scrollIntoView({ behavior: "smooth", block: "start" });
+        }
+      });
+    });
   </script>
 
 

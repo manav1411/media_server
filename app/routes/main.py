@@ -1,5 +1,5 @@
+from ..utils import load_progress, search_and_download_subtitle, finalize_movie_folder, download_poster_and_metadata
 from flask import Blueprint, request, render_template, current_app, session, jsonify
-from ..utils import load_progress, search_and_download_subtitle, finalize_movie_folder, download_poster
 from urllib.parse import urlencode
 from dotenv import load_dotenv
 import subprocess
@@ -34,23 +34,49 @@ def landing_page():
     media_path = current_app.config['MEDIA_PATH']
     movies = []
 
+    # hard reset session in case dev error
+    ## session["searched_movies"] = []
+
     for name in os.listdir(media_path):
         movie_dir = os.path.join(media_path, name)
         if os.path.isdir(movie_dir):
-            # only show fully processed movies
-            subtitles_file = os.path.join(movie_dir, "subtitles.vtt")
+            subtitles_file = os.path.join(movie_dir, "metadata.json")
             if not os.path.exists(subtitles_file):
                 continue
-            
+
+            metadata_path = os.path.join(movie_dir, "metadata.json")
+            if not os.path.exists(metadata_path):
+                continue
+
+            try:
+                with open(metadata_path, encoding='utf-8') as f:
+                    metadata = json.load(f)
+            except Exception as e:
+                current_app.logger.warning(f"Failed to read metadata for {name}: {e}")
+                continue
+
             poster = f"/media/{name}/poster.jpg"
             seconds = progress.get(request.user_email, {}).get(name, 0)
-            movies.append({"name": name, "poster": poster, "progress_seconds": seconds})
+
+            movie_info = {
+                "name": name,
+                "poster": poster,
+                "progress_seconds": seconds,
+                "title": metadata.get("title", name),
+                "year": metadata.get("release_date", "")[:4],
+                "overview": metadata.get("overview", "No description available."),
+                "genres": metadata.get("genres", []),
+                "runtime": metadata.get("runtime"),
+                "rating": metadata.get("rating"),
+                "tmdb_id": metadata.get("tmdb_id")
+            }
+
+            movies.append(movie_info)
 
     # Initialize searched_movies if not present
     if "searched_movies" not in session:
         session["searched_movies"] = []
 
-    # Remove completed downloads from search list
     session["searched_movies"] = [
         m for m in session["searched_movies"]
         if m["id"] not in completed_downloads
@@ -75,13 +101,18 @@ def landing_page():
                     session["searched_movies"].append(most_popular)
                     session.modified = True
 
-                    # start download automatically
                     try:
                         start_download(most_popular["id"])
                     except Exception as e:
                         current_app.logger.error(f"Auto-download failed: {e}")
 
-    return render_template("index.html", user_email=request.user_email, movies=movies, searched_movies=session["searched_movies"])
+    return render_template(
+        "index.html",
+        user_name=request.user_name,
+        movies=movies,
+        searched_movies=session["searched_movies"]
+    )
+
 
 
 @bp.route("/remove_movie/<int:movie_id>", methods=["POST"])
@@ -125,11 +156,12 @@ def start_download(tmdb_id):
     headers = {"Authorization": f"Bearer {TMDB_API_KEY}"}
     response = requests.get(f"https://api.themoviedb.org/3/movie/{tmdb_id}", headers=headers)
     movie_data = response.json()
-    movie_title = movie_data["title"]
+    movie_title = movie_data["title"].replace(":", "")
 
     in_progress_downloads[tmdb_id] = movie_title
 
     # 1. Search Jackett
+    print(f"{movie_title} {movie_data.get('release_date', '')[:4]}")
     jackett_url = f"http://localhost:9117/api/v2.0/indexers/all/results"
     query = {
         "apikey": JACKETT_API_KEY,
@@ -186,7 +218,7 @@ def download_status(movie_title):
                     # post-processing after download done
                     base_path = os.path.join(current_app.config['MEDIA_PATH'], movie_title)
                     finalize_movie_folder(base_path)
-                    download_poster(tmdb_id, base_path)
+                    download_poster_and_metadata(tmdb_id, base_path)
                     search_and_download_subtitle(movie_title, base_path)
 
             return jsonify({
