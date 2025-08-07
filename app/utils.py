@@ -5,6 +5,7 @@ import requests
 import shutil
 import json
 import os
+import re
 
 OPENSUBTITLES_API_KEY = os.getenv("OPENSUBTITLES_API_KEY")
 load_dotenv(dotenv_path="/home/manavpi/home_server/.env")
