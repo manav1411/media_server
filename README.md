@@ -37,11 +37,29 @@ Components:
 
 Folder Structure:
 ```
+/app
+├── auth.py
+├── __init__.py
+├── /routes
+│   ├── main.py
+│   ├── media.py
+│   ├── progress.py
+├── /static
+│   ├── global.css
+│   └── movie.css
+├── /templates
+│   ├── index.html
+│   └── movie.html
+├── user_progress
+├── user_progress.json
+└── utils.py
 /media_library
   └── Movie_Name/
        ├── movie.mp4
        ├── subtitles.vtt
        └── poster.jpg
+run.py
+README.md
 ```
 - Each movie has its own folder named after the movie.
 - The main video file is movie.mp4 (currently supports mp4 format only).
@@ -49,22 +67,14 @@ Folder Structure:
 - The poster image is saved as poster.jpg.
 
 ## Features
-- Movie Search and Request
-> Users can search for movies using the TMDb API from the homepage.
-- Automated Torrent Download
-> The most seeded torrent matching the search is automatically downloaded via Jackett + qBittorrent.
-- Download Progress Tracking
-> The UI shows real-time progress of torrent downloads per requested movie.
-- Playback Progress Persistence
-> Tracks where each user left off in a movie; resumes playback accordingly.
-- Subtitles Support
-> Automatically downloads and converts subtitles to .vtt for in-browser display.
-- Multi-user Support
-> Multiple users authenticated through Cloudflare Access share the media library but have separate playback states.
-- Mobile-Friendly Interface
-> Responsive design with custom video controls optimized for touch.
-- Secure Access
-> Restricts access to authorized users via Cloudflare Access.
+- Movie Search and Request -> Users can search for movies using the TMDb API from the homepage.
+- Automated Torrent Download -> The most seeded torrent matching the search is automatically downloaded via Jackett + qBittorrent.
+- Download Progress Tracking -> The UI shows real-time progress of torrent downloads per requested movie.
+- Playback Progress Persistence -> Tracks where each user left off in a movie; resumes playback accordingly.
+- Subtitles Support -> Automatically downloads and converts subtitles to .vtt for in-browser display.
+- Multi-user Support -> Multiple users authenticated through Cloudflare Access share the media library but have separate playback states.
+- Mobile-Friendly Interface -> Responsive design with custom video controls optimized for touch.
+- Secure Access -> Restricts access to authorized users via Cloudflare Access.
 
 ## Limitations & Future Improvements
 - Only supports .mp4 video format; does not currently handle .mkv or other container formats.
