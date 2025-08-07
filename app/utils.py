@@ -6,25 +6,29 @@ import shutil
 import json
 import os
 
-load_dotenv(dotenv_path="/home/manavpi/home_server/.env")
 OPENSUBTITLES_API_KEY = os.getenv("OPENSUBTITLES_API_KEY")
+load_dotenv(dotenv_path="/home/manavpi/home_server/.env")
 TMDB_API_KEY = os.getenv("TMDB_API_KEY")
 
+# normalises string to remove any special characters
 def normalize(title):
     return re.sub(r'\W+', '', title.lower())
 
+# loads progress from json from given path
 def load_progress(path):
     if os.path.exists(path):
         with open(path, "r") as f:
             return json.load(f)
     return {}
 
+# updates json file with given data
 def save_progress(path, data):
     with open(path, "w") as f:
         json.dump(data, f)
 
 
 
+# converts srt subtitles to vtt format (ideal for web use)
 def convert_srt_to_vtt(srt_path):
     vtt_path = srt_path.replace(".srt", ".vtt")
     try:
@@ -37,6 +41,8 @@ def convert_srt_to_vtt(srt_path):
         return None
 
 
+
+# searches for subs using opensubtitles, downloads most popular subs to given save path
 def search_and_download_subtitle(movie_name, save_path, language="en"):
     search_url = "https://api.opensubtitles.com/api/v1/subtitles"
     headers = {
@@ -51,8 +57,8 @@ def search_and_download_subtitle(movie_name, save_path, language="en"):
         "order_direction": "desc"
     }
 
+    # sends request to search for subs
     response = requests.get(search_url, headers=headers, params=params)
-
     try:
         data = response.json()
     except Exception:
@@ -68,9 +74,9 @@ def search_and_download_subtitle(movie_name, save_path, language="en"):
     best_match = data["data"][0]
     file_id = best_match["attributes"]["files"][0]["file_id"]
 
+    # sends request to download subs
     download_url = "https://api.opensubtitles.com/api/v1/download"
     r = requests.post(download_url, headers=headers, json={"file_id": file_id})
-
     try:
         dl_link = r.json().get("link")
     except Exception:
@@ -83,7 +89,7 @@ def search_and_download_subtitle(movie_name, save_path, language="en"):
         print("No download link found")
         return False
 
-    # Step 3: Download subtitle file
+    # Downloads subtitle file
     sub_response = requests.get(dl_link)
     os.makedirs(save_path, exist_ok=True)
     srt_path = os.path.join(save_path, "subtitles.srt")
@@ -92,14 +98,13 @@ def search_and_download_subtitle(movie_name, save_path, language="en"):
 
     print(f"Subtitle saved to: {srt_path}")
 
-    # Convert to .vtt
+    # Converts to .vtt
     vtt_path = convert_srt_to_vtt(srt_path)
     return vtt_path is not None
 
 
 
-
-# move biggest file from child to parent folder, renames file to 'movie', removes child folder
+# move biggest file from child to parent folder, renames file to 'movie.{ext}', removes child folder
 def finalize_movie_folder(base_path):
     contents = os.listdir(base_path)
     dirs = [d for d in contents if os.path.isdir(os.path.join(base_path, d))]
@@ -111,6 +116,7 @@ def finalize_movie_folder(base_path):
     inner_folder = os.path.join(base_path, dirs[0])
     video_files = []
 
+    # finds biggest video file in child folder
     for root, _, files in os.walk(inner_folder):
         for file in files:
             if file.lower().endswith((".mp4", ".mkv", ".avi", ".mov")):
@@ -127,6 +133,7 @@ def finalize_movie_folder(base_path):
     ext = os.path.splitext(original_filename)[1]
     dst_path = os.path.join(base_path, f"movie{ext}")
 
+    # move video file from child, then remove child
     shutil.move(src_path, dst_path)
     shutil.rmtree(inner_folder)
     current_app.logger.info(f"Moved {original_filename} to {dst_path} and removed {inner_folder}")
@@ -134,8 +141,10 @@ def finalize_movie_folder(base_path):
 
 
 
-# helper function to download poster
+# downloads poster from tmdb database, given the movie id, and saves to given path
 def download_poster_and_metadata(tmdb_id, save_path):
+    
+    # sends request to tmdb of given movie id
     headers = {"Authorization": f"Bearer {TMDB_API_KEY}"}
     url = f"https://api.themoviedb.org/3/movie/{tmdb_id}"
     r = requests.get(url, headers=headers)
@@ -147,7 +156,7 @@ def download_poster_and_metadata(tmdb_id, save_path):
     data = r.json()
     poster_path = data.get("poster_path")
 
-    # Save metadata
+    # saves metadata of movie
     metadata = {
         "title": data.get("title"),
         "overview": data.get("overview"),
@@ -155,10 +164,11 @@ def download_poster_and_metadata(tmdb_id, save_path):
         "genres": [genre["name"] for genre in data.get("genres", [])],
         "runtime": data.get("runtime"),
         "rating": data.get("vote_average"),
-        "poster_path": poster_path,  # optional, in case you want to cache URLs too
+        "poster_path": poster_path,
         "tmdb_id": tmdb_id
     }
 
+    # places metadata and poster in the correct movie path
     metadata_file_path = os.path.join(save_path, "metadata.json")
     try:
         with open(metadata_file_path, "w", encoding="utf-8") as f:

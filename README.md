@@ -110,7 +110,7 @@ pi is running on local IP http://192.168.0.134
 - Search and request movies from the homepage.
 
 ## Architecture Diagram
-(TODO: diagram here, the flow between user → Cloudflare Access → Cloudflare Tunnel → NGINX → Flask → Jackett/qBittorrent n Media Files)
+(TODO: diagram here, the flow between user → Cloudflare Access → Cloudflare Tunnel → NGINX → Flask → Jackett/qBittorrent n Media Files). Include cloudflare using google's API to authenticate
 
 ## Key Files & Components
 - server.py: Flask backend handling requests and user sessions

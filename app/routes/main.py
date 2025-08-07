@@ -19,14 +19,19 @@ bp = Blueprint("main", __name__)
 progress = {}
 MAX_SEARCH_RESULTS = 5
 in_progress_downloads = {}
-post_processed = set()  # tracks processed movies
+post_processed = set()
 completed_downloads = set()
 
+
+# initially loads the user's progress from the json data
 @bp.before_app_first_request
 def load_user_progress():
     global progress
     progress = load_progress(current_app.config['PROGRESS_PATH'])
 
+
+
+# home page, as well as POST request to search for tmdb movies
 @bp.route("/", methods=["GET", "POST"])
 def landing_page():
     global progress
@@ -35,21 +40,13 @@ def landing_page():
     media_path = current_app.config['MEDIA_PATH']
     movies = []
 
-    # hard reset session in case dev error
-    ## session["searched_movies"] = []
-    
-
+    # lists all available movies, ensuring they have correctly post-processed
     for name in os.listdir(media_path):
         movie_dir = os.path.join(media_path, name)
         if os.path.isdir(movie_dir):
-            subtitles_file = os.path.join(movie_dir, "metadata.json")
-            if not os.path.exists(subtitles_file):
-                continue
-
             metadata_path = os.path.join(movie_dir, "metadata.json")
             if not os.path.exists(metadata_path):
                 continue
-
             try:
                 with open(metadata_path, encoding='utf-8') as f:
                     metadata = json.load(f)
@@ -57,6 +54,7 @@ def landing_page():
                 current_app.logger.warning(f"Failed to read metadata for {name}: {e}")
                 continue
 
+            # provides the movie's corresponding metadata/poster
             poster = f"/media/{name}/poster.jpg"
             encoded_name = html.escape(name, quote=True).replace("&#x27;", "&#39;")
             seconds = progress.get(request.user_email, {}).get(encoded_name, 0)
@@ -73,10 +71,9 @@ def landing_page():
                 "rating": metadata.get("rating"),
                 "tmdb_id": metadata.get("tmdb_id")
             }
-
             movies.append(movie_info)
 
-    # Initialize searched_movies if not present
+    # initialise searched_movies if not present
     if "searched_movies" not in session:
         session["searched_movies"] = []
 
@@ -86,6 +83,7 @@ def landing_page():
     ]
     session.modified = True
 
+    # post request to search tmdb for movies given user input
     if request.method == "POST":
         query = request.form.get("query")
         if query:
@@ -101,11 +99,11 @@ def landing_page():
 
                 close_matches = [r for r in results if normalize(r["title"]) == query_normalized]
 
-                # If any close match exists, pick the one with highest popularity
+                # if any close match exists, pick the one with highest popularity
                 if close_matches:
                     most_popular = max(close_matches, key=lambda r: r.get("popularity", 0))
                 else:
-                    # Fallback: just take the most popular from all results
+                    # fallback: just take the most popular from all results
                     most_popular = max(results, key=lambda r: r.get("popularity", 0))
 
                 if not any(m["id"] == most_popular["id"] for m in session["searched_movies"]):
@@ -120,6 +118,7 @@ def landing_page():
                         current_app.logger.error(f"Auto-download failed: {e}")
         return redirect(url_for("main.landing_page"))
 
+    # passes session/user info to and returns the homepage html
     return render_template(
         "index.html",
         user_name=request.user_name,
@@ -129,6 +128,7 @@ def landing_page():
 
 
 
+# removes movie from the requests session, given id
 @bp.route("/remove_movie/<int:movie_id>", methods=["POST"])
 def remove_movie(movie_id):
     # Remove movie by TMDb ID from session list
@@ -137,6 +137,9 @@ def remove_movie(movie_id):
         session.modified = True
     return "", 204  # No Content response
 
+
+
+# returns movie and subtitles files given movie name
 @bp.route("/movie/<movie_name>")
 def movie_page(movie_name):
     movie_file = f"/media/{movie_name}/movie.mp4"
@@ -144,7 +147,8 @@ def movie_page(movie_name):
     return render_template("movie.html", movie_name=movie_name, movie_file=movie_file, subtitles_file=subtitles_file)
 
 
-# helper function to start downloads
+
+# helper function -> begins downloads on qbitorrent
 def start_qbittorrent_download(torrent_url, save_path):
     qb_host = os.getenv("QBITTORRENT_HOST")
     qb_user = os.getenv("QBITTORRENT_USER")
@@ -156,7 +160,7 @@ def start_qbittorrent_download(torrent_url, save_path):
     if login.status_code != 200 or login.text != "Ok.":
         return False
 
-    # Add torrent
+    # Adds torrent
     add = s.post(f"{qb_host}/api/v2/torrents/add", data={
         "urls": torrent_url,
         "savepath": save_path,
@@ -164,9 +168,12 @@ def start_qbittorrent_download(torrent_url, save_path):
     })
     return add.status_code == 200
 
+
+
+# given tmdb id of movie, begins the torrent download
 @bp.route("/start_download/<int:tmdb_id>", methods=["POST"])
 def start_download(tmdb_id):
-    # First: get TMDb info
+    # gets TMDb info
     headers = {"Authorization": f"Bearer {TMDB_API_KEY}"}
     response = requests.get(f"https://api.themoviedb.org/3/movie/{tmdb_id}", headers=headers)
     movie_data = response.json()
@@ -177,7 +184,7 @@ def start_download(tmdb_id):
         "original_title": movie_data["title"]
     }
 
-    # 1. Search Jackett
+    # searches Jackett
     jackett_url = f"http://localhost:9117/api/v2.0/indexers/all/results"
     query = {
         "apikey": JACKETT_API_KEY,
@@ -192,16 +199,16 @@ def start_download(tmdb_id):
     if not results:
         return jsonify({"error": "No torrents found"}), 404
 
-    # 2. Choose best torrent (by seeders)
+    # chooses best torrent (by seeders)
     filtered_results = [r for r in results if "1080p" in r["Title"].lower()]
     if not filtered_results:
         filtered_results = results  # fallback to all results
     
-    # Sort by seeders
+    # sorts by seeders
     filtered_results.sort(key=lambda x: x.get("Seeders", 0), reverse=True)
     best = filtered_results[0]
 
-    # 3. Start download with qBittorrent
+    # starts download with qBittorrent
     save_path = os.path.join(current_app.config['MEDIA_PATH'], movie_title)
     os.makedirs(save_path, exist_ok=True)
     success = start_qbittorrent_download(best["MagnetUri"], save_path)
@@ -212,6 +219,8 @@ def start_download(tmdb_id):
     return jsonify({"status": "started", "title": movie_title})
 
 
+
+# returns torrenting progress of requested movie
 @bp.route("/download_status/<movie_title>")
 def download_status(movie_title):
     qb_host = os.getenv("QBITTORRENT_HOST")
@@ -250,6 +259,8 @@ def download_status(movie_title):
     return jsonify({"error": "Torrent not found"}), 404
 
 
+
+# returns current download state (idle, downloading, or completed) of requested movie from tmdb id
 @bp.route("/download_state/<int:tmdb_id>")
 def download_state(tmdb_id):
     if tmdb_id in completed_downloads:
@@ -259,13 +270,15 @@ def download_state(tmdb_id):
     return jsonify({"state": "idle"})
 
 
+
+# cancels requested download, removing it from qbitorrent, the requests session, and deleting the relevant directory
 @bp.route("/cancel_download/<int:tmdb_id>", methods=["POST"])
 def cancel_download(tmdb_id):
     title = in_progress_downloads.get(tmdb_id)["title"]
     if not title:
         return jsonify({"error": "not in progress"}), 404
 
-    # Remove from qBittorrent
+    # remove from qbittorrent
     qb_host = os.getenv("QBITTORRENT_HOST")
     qb_user = os.getenv("QBITTORRENT_USER")
     qb_pass = os.getenv("QBITTORRENT_PASS")
@@ -275,7 +288,7 @@ def cancel_download(tmdb_id):
     if login.status_code != 200 or login.text != "Ok.":
         return jsonify({"error": "login failed"}), 500
 
-    # Get torrent hashes
+    # get torrent hashes
     info = s.get(f"{qb_host}/api/v2/torrents/info", params={"category": "media"})
     torrents = info.json()
     for torrent in torrents:
@@ -297,8 +310,9 @@ def cancel_download(tmdb_id):
 
     return jsonify({"status": "cancelled"})
 
- 
-# get media directory stats
+
+
+# get media directory stats, namely file sizes
 @bp.route("/controls_info")
 def controls_info():
     media_path = current_app.config['MEDIA_PATH']
@@ -319,12 +333,16 @@ def controls_info():
         "directories": folders
     })
 
-# clear session
+
+
+# clears session, useful user button when torrents are failing to cancel
 @bp.route("/reset_search", methods=["POST"])
 def reset_search():
     session["searched_movies"] = []
     session.modified = True
     return "", 204
+
+
 
 # removes torrent and deletes movie folder
 @bp.route("/delete_folder/<folder>", methods=["POST"])
