@@ -16,11 +16,7 @@ if running into error of movies stuck in requested section, add 'session["search
 
 
 things to fix:
-1. clicking on any part of the card (not just poster), like name, should open movie.
-2. when person wants to reload, why is "Are you sure you want to send a form again?" showing up? fix.
-3. make it mobile-friendly
-3. delay in watched movie bar
-4. search for Dune Part Two doesn't work for some reason...
+3. delay in watched movie bar / sometimes not accurate/loaded
 5. if torrent gives mkv, convert to mp4
 5. (not implementing) tv show support
 6. (not implementing) searching for movies in library (will be a small library)

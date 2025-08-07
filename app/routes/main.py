@@ -1,5 +1,5 @@
 from ..utils import load_progress, search_and_download_subtitle, finalize_movie_folder, download_poster_and_metadata
-from flask import Blueprint, request, render_template, current_app, session, jsonify
+from flask import Blueprint, request, render_template, current_app, session, jsonify, redirect, url_for
 from urllib.parse import urlencode
 from dotenv import load_dotenv
 import subprocess
@@ -8,10 +8,14 @@ import shutil
 import gzip
 import json
 import os
+import re
 
 load_dotenv(dotenv_path="/home/manavpi/home_server/.env")
 JACKETT_API_KEY = os.getenv("JACKETT_API_KEY")
 TMDB_API_KEY = os.getenv("TMDB_API_KEY")
+
+def normalize(title):
+    return re.sub(r'\W+', '', title.lower())
 
 
 bp = Blueprint("main", __name__)
@@ -93,7 +97,17 @@ def landing_page():
             data = response.json()
             results = data.get("results", [])
             if results:
-                most_popular = results[0]
+
+                query_normalized = normalize(query)
+
+                close_matches = [r for r in results if normalize(r["title"]) == query_normalized]
+
+                # If any close match exists, pick the one with highest popularity
+                if close_matches:
+                    most_popular = max(close_matches, key=lambda r: r.get("popularity", 0))
+                else:
+                    # Fallback: just take the most popular from all results
+                    most_popular = max(results, key=lambda r: r.get("popularity", 0))
 
                 if not any(m["id"] == most_popular["id"] for m in session["searched_movies"]):
                     if len(session["searched_movies"]) >= MAX_SEARCH_RESULTS:
@@ -105,6 +119,7 @@ def landing_page():
                         start_download(most_popular["id"])
                     except Exception as e:
                         current_app.logger.error(f"Auto-download failed: {e}")
+        return redirect(url_for("main.landing_page"))
 
     return render_template(
         "index.html",
@@ -156,16 +171,18 @@ def start_download(tmdb_id):
     headers = {"Authorization": f"Bearer {TMDB_API_KEY}"}
     response = requests.get(f"https://api.themoviedb.org/3/movie/{tmdb_id}", headers=headers)
     movie_data = response.json()
-    movie_title = movie_data["title"].replace(":", "")
+    movie_title = movie_data["title"]
 
-    in_progress_downloads[tmdb_id] = movie_title
+    in_progress_downloads[tmdb_id] = {
+        "title": movie_title,
+        "original_title": movie_data["title"]
+    }
 
     # 1. Search Jackett
-    print(f"{movie_title} {movie_data.get('release_date', '')[:4]}")
     jackett_url = f"http://localhost:9117/api/v2.0/indexers/all/results"
     query = {
         "apikey": JACKETT_API_KEY,
-        "Query": f"{movie_title} {movie_data.get('release_date', '')[:4]}"
+        "Query": f"{movie_title} {movie_data.get('release_date', '')[:4]}" if movie_title.lower() != "casablanca" else movie_title
     }
 
     r = requests.get(jackett_url, params=query)
@@ -177,9 +194,13 @@ def start_download(tmdb_id):
         return jsonify({"error": "No torrents found"}), 404
 
     # 2. Choose best torrent (by seeders)
-    results = [r for r in results if "1080p" in r["Title"].lower()]
-    results.sort(key=lambda x: x.get("Seeders", 0), reverse=True)
-    best = results[0]
+    filtered_results = [r for r in results if "1080p" in r["Title"].lower()]
+    if not filtered_results:
+        filtered_results = results  # fallback to all results
+    
+    # Sort by seeders
+    filtered_results.sort(key=lambda x: x.get("Seeders", 0), reverse=True)
+    best = filtered_results[0]
 
     # 3. Start download with qBittorrent
     save_path = os.path.join(current_app.config['MEDIA_PATH'], movie_title)
@@ -206,9 +227,10 @@ def download_status(movie_title):
     torrents = s.get(f"{qb_host}/api/v2/torrents/info").json()
 
     for torrent in torrents:
-        if movie_title.lower() in torrent["name"].lower():
+        if normalize(movie_title) in normalize(torrent["name"]):
+
             # Find matching tmdb_id for this title
-            tmdb_id = next((id for id, title in in_progress_downloads.items() if title.lower() == movie_title.lower()), None)
+            tmdb_id = next((id for id, title in in_progress_downloads.items() if normalize(title["title"]) == normalize(movie_title)), None)
 
             if torrent["progress"] >= 1.0:
                 if tmdb_id:
@@ -240,7 +262,7 @@ def download_state(tmdb_id):
 
 @bp.route("/cancel_download/<int:tmdb_id>", methods=["POST"])
 def cancel_download(tmdb_id):
-    title = in_progress_downloads.get(tmdb_id)
+    title = in_progress_downloads.get(tmdb_id)["title"]
     if not title:
         return jsonify({"error": "not in progress"}), 404
 

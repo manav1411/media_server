@@ -32,12 +32,12 @@ body {
   left: 24px;
   background: rgba(0, 0, 0, 0.4);
   color: #eee;
-  padding: 8px 14px;
+  padding: 0px 5px;
   border: none;
   border-radius: 6px;
   font-size: 16px;
   cursor: pointer;
-  backdrop-filter: blur(8px);
+  backdrop-filter: blur(1px);
   transition: background-color 0.3s ease;
   z-index: 1000;
 }
@@ -46,10 +46,13 @@ body {
   background: rgba(255, 255, 255, 0.15);
 }
 
+
 /* Video Player - full viewport, no border radius */
 video#player {
   width: 100vw;
-  object-fit: cover;
+  height: 100vh;
+  object-fit: contain;
+  background: black;
   outline: none;
   background: black;
   user-select: none;
@@ -63,7 +66,7 @@ video#player {
   width: 100vw;
   padding: 12px 24px;
   background: rgba(0, 0, 0, 0.6);
-  backdrop-filter: blur(10px);
+  backdrop-filter: blur(1px);
   display: flex;
   align-items: center;
   gap: 16px;
@@ -91,12 +94,24 @@ button.control-btn {
   background: transparent;
   color: #ddd;
   border: none;
-  padding: 6px 12px;
+  padding: 2px 2px;
   border-radius: 4px;
   font-size: 14px;
   cursor: pointer;
   transition: background-color 0.25s ease, color 0.25s ease;
   user-select: none;
+}
+
+.control-btn svg {
+  width: 32px;  /* or any size you want */
+  height: 32px;
+  fill: #eee;
+  pointer-events: none; 
+}
+
+#playIcon, #pauseIcon {
+  width: 38px !important;
+  height: 38px !important;
 }
 
 button.control-btn:hover,
@@ -136,7 +151,7 @@ button.control-btn:focus {
   }
 
   button.control-btn {
-    padding: 8px 10px;
+    padding: 0;
     font-size: 13px;
   }
 
@@ -154,4 +169,32 @@ button.control-btn:focus {
 #backBtn,
 #controls {
   transition: opacity 0.5s ease;
+}
+
+#loadingSpinner {
+  display: block; /* default visible */
+}
+
+/* Spinner animation */
+.spinner {
+  border: 6px solid rgba(255, 255, 255, 0.2);
+  border-top: 6px solid #55aaff;
+  border-radius: 50%;
+  width: 48px;
+  height: 48px;
+  animation: spin 1s linear infinite;
+}
+
+.spinner-ring {
+  stroke: #ffffff;
+  stroke-width: 8;
+  stroke-linecap: round;
+  filter: drop-shadow(0 0 60px #3498db);
+}
+
+
+/* Hide overlay when ready */
+#loadingOverlay.hidden {
+  opacity: 0;
+  pointer-events: none;
 }

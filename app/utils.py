@@ -11,7 +11,6 @@ OPENSUBTITLES_API_KEY = os.getenv("OPENSUBTITLES_API_KEY")
 TMDB_API_KEY = os.getenv("TMDB_API_KEY")
 
 
-
 def load_progress(path):
     if os.path.exists(path):
         with open(path, "r") as f:
