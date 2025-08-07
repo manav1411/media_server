@@ -96,12 +96,13 @@ README.md
 
 ### Starting Services
 ```
-sudo systemctl restart server      # Flask server on port 8000
-sudo systemctl restart cloudflared # Cloudflare tunnel
-sudo systemctl restart nginx       # NGINX reverse proxy on port 5000
-sudo systemctl restart jackett     # Torrent indexer
-sudo systemctl restart qbittorrent-nox # Torrent client
+sudo systemctl restart server           # Flask server on port 8000
+sudo systemctl restart cloudflared      # Cloudflare tunnel
+sudo systemctl restart nginx            # NGINX reverse proxy on port 5000
+sudo systemctl restart jackett          # Torrent indexer on port 9117
+sudo systemctl restart qbittorrent-nox  # Torrent client on port 8080
 ```
+pi is running on local IP http://192.168.0.134
 
 ### Access
 - Open your browser to: https://home.mydomain.com
@@ -136,32 +137,3 @@ This project is designed as a personal learning and self-hosted system. Contribu
 - Modify server.py to add new features or integrate other indexers.
 - Improve UI/UX and add additional metadata support.
 - Add TV shows, series support, or library search features.
-
-
-
-
-
-
-
-<OLD>
-background services:
-flask server->          sudo systemctl restart server           -> running on port 8000
-cloudflared tunnel->    sudo systemctl restart cloudflared
-nginx server->          sudo systemctl restart nginx            -> running on port 5000
-jackett->               sudo systemctl restart jackett          -> visit at http://192.168.0.134:9117
-qbitorrent->            sudo systemctl restart qbittorrent-nox  -> visit at http://192.168.0.134:8080
-
-
-
-folder structure inside media_library:
-each folder is a movie name, 
-inside each folder movie.mp4 is the movie, subtitles.vtt is the subtitles, poster.jpg is the poster.
-
-
-things to fix:
-1. will not work if torrent contains mkv file instead of mp4
-2. subtitles can be inaccurate - provide users with a list to select from, and the option to offset time
-3. (not implementing) tv show support
-4. (not implementing) searching for movies in library (will be a small library)
-5. (not implementing) trailers, cast, etc like netflix.
-</OLD>
