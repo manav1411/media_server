@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <link rel="stylesheet" href="{{ url_for('static', filename='global.css') }}?v=7">
+    <link rel="stylesheet" href="{{ url_for('static', filename='global.css') }}?v=10">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Home</title>
 </head>
@@ -17,7 +17,10 @@
             <a href="/movie/{{ movie.name }}">
               <img src="{{ movie.poster }}" alt="Poster for {{ movie.title }}">
             </a>
-            <div class="progress-container" data-movie="{{ movie.name }}" data-seconds="{{ movie.progress_seconds }}">
+            <div class="progress-container"
+                data-movie="{{ movie.name }}"
+                data-seconds="{{ movie.progress_seconds }}"
+                data-duration="{{ movie.runtime * 60 }}">
               <div class="progress-bar"></div>
             </div>
           </div>
@@ -43,7 +46,7 @@
       </div>
     </div>
 
-    <!-- EXISTING TMDb SEARCH (your current search and results) -->
+    <!-- TMDb SEARCH-->
     {% if searched_movies|length == 0 %}
     <div class="search-wrapper bottom-search">
       <div class="search-container">
@@ -96,30 +99,33 @@
     </div>
     {% endif %}
 
+
+    <div id="controls-toggle">⚙️ Controls</div>
+    <div id="controls-panel" class="hidden">
+      <div id="storage-info">Loading...</div>
+      <ul id="media-directories"></ul>
+      <p style="margin-top: 1em;">
+        If torrent(s) are failing to cancel, when ONLY those torrents are in the requests section, 
+        <button id="reset-search-btn">Click Here</button>
+      </p>
+    </div>
+
+
+
   </div>
 
-  <video id="dummy" style="display:none"></video>
   <script>
-    const dummy = document.getElementById("dummy");
-    const containers = document.querySelectorAll(".progress-container");
-
-    containers.forEach(container => {
-        const movie = container.dataset.movie;
+    document.addEventListener("DOMContentLoaded", () => {
+      document.querySelectorAll(".progress-container").forEach(container => {
         const seconds = parseFloat(container.dataset.seconds);
+        const duration = parseFloat(container.dataset.duration);
         const bar = container.querySelector(".progress-bar");
 
-        const src = `/media/${movie}/movie.mp4`;
-        dummy.src = src;
-
-        dummy.addEventListener("loadedmetadata", () => {
-            const duration = dummy.duration;
-            if (duration > 0 && seconds > 0) {
-                const percent = Math.min((seconds / duration) * 100, 100);
-                bar.style.width = percent + "%";
-            }
-        }, { once: true });
-
-        dummy.load();
+        if (duration > 0 && seconds > 0) {
+          const percent = Math.min((seconds / duration) * 100, 100);
+          bar.style.width = percent + "%";
+        }
+      });
     });
   </script>
 
@@ -258,7 +264,48 @@
     });
   </script>
 
+  <script>
+    const toggleBtn = document.getElementById("controls-toggle");
+    const panel = document.getElementById("controls-panel");
 
+    toggleBtn.addEventListener("click", () => {
+      panel.classList.toggle("hidden");
+      if (!panel.classList.contains("hidden")) {
+        fetch("/controls_info")
+          .then(res => res.json())
+          .then(data => {
+            document.getElementById("storage-info").innerHTML = 
+            `<div style="text-align: center; font-size: 1.5em; font-weight: bold;">
+              Library size: ${(data.total_size / 1024).toFixed(2)} GB
+            </div>`;
 
+            const ul = document.getElementById("media-directories");
+            ul.innerHTML = "";
+            data.directories.forEach(dir => {
+              const li = document.createElement("li");
+              li.innerHTML = `
+                <span>${dir.name} (${(dir.size / 1024).toFixed(2)} GB)</span>
+                <button data-folder="${dir.name}">Delete</button>
+              `;
+              ul.appendChild(li);
+            });
+          });
+      }
+    });
+
+    document.getElementById("reset-search-btn").addEventListener("click", () => {
+      fetch("/reset_search", { method: "POST" }).then(() => location.reload());
+    });
+
+    document.getElementById("media-directories").addEventListener("click", (e) => {
+      if (e.target.tagName === "BUTTON") {
+        const folder = e.target.getAttribute("data-folder");
+        if (confirm(`Delete ${folder}?`)) {
+          fetch(`/delete_folder/${encodeURIComponent(folder)}`, { method: "POST" })
+            .then(() => location.reload());
+        }
+      }
+    });
+  </script>
 </body>
 </html>

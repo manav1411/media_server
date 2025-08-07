@@ -10,6 +10,8 @@ load_dotenv(dotenv_path="/home/manavpi/home_server/.env")
 OPENSUBTITLES_API_KEY = os.getenv("OPENSUBTITLES_API_KEY")
 TMDB_API_KEY = os.getenv("TMDB_API_KEY")
 
+def normalize(title):
+    return re.sub(r'\W+', '', title.lower())
 
 def load_progress(path):
     if os.path.exists(path):

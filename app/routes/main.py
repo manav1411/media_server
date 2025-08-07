@@ -1,4 +1,4 @@
-from ..utils import load_progress, search_and_download_subtitle, finalize_movie_folder, download_poster_and_metadata
+from ..utils import load_progress, search_and_download_subtitle, finalize_movie_folder, download_poster_and_metadata, normalize
 from flask import Blueprint, request, render_template, current_app, session, jsonify, redirect, url_for
 from urllib.parse import urlencode
 from dotenv import load_dotenv
@@ -6,6 +6,7 @@ import subprocess
 import requests
 import shutil
 import gzip
+import html
 import json
 import os
 import re
@@ -13,10 +14,6 @@ import re
 load_dotenv(dotenv_path="/home/manavpi/home_server/.env")
 JACKETT_API_KEY = os.getenv("JACKETT_API_KEY")
 TMDB_API_KEY = os.getenv("TMDB_API_KEY")
-
-def normalize(title):
-    return re.sub(r'\W+', '', title.lower())
-
 
 bp = Blueprint("main", __name__)
 progress = {}
@@ -40,6 +37,7 @@ def landing_page():
 
     # hard reset session in case dev error
     ## session["searched_movies"] = []
+    
 
     for name in os.listdir(media_path):
         movie_dir = os.path.join(media_path, name)
@@ -60,7 +58,8 @@ def landing_page():
                 continue
 
             poster = f"/media/{name}/poster.jpg"
-            seconds = progress.get(request.user_email, {}).get(name, 0)
+            encoded_name = html.escape(name, quote=True).replace("&#x27;", "&#39;")
+            seconds = progress.get(request.user_email, {}).get(encoded_name, 0)
 
             movie_info = {
                 "name": name,
@@ -280,7 +279,7 @@ def cancel_download(tmdb_id):
     info = s.get(f"{qb_host}/api/v2/torrents/info", params={"category": "media"})
     torrents = info.json()
     for torrent in torrents:
-        if title.lower() in torrent["name"].lower():
+        if normalize(title) in normalize(torrent["name"]):
             hash_ = torrent["hash"]
             s.post(f"{qb_host}/api/v2/torrents/delete", data={"hashes": hash_, "deleteFiles": "true"})
             break
@@ -297,3 +296,65 @@ def cancel_download(tmdb_id):
     session.modified = True
 
     return jsonify({"status": "cancelled"})
+
+ 
+# get media directory stats
+@bp.route("/controls_info")
+def controls_info():
+    media_path = current_app.config['MEDIA_PATH']
+    total_size = 0
+    folders = []
+
+    for folder in os.listdir(media_path):
+        folder_path = os.path.join(media_path, folder)
+        if os.path.isdir(folder_path):
+            size = sum(os.path.getsize(os.path.join(dp, f))
+                       for dp, dn, filenames in os.walk(folder_path)
+                       for f in filenames)
+            total_size += size
+            folders.append({"name": folder, "size": round(size / (1024 * 1024), 2)})
+
+    return jsonify({
+        "total_size": round(total_size / (1024 * 1024), 2),  # in MB
+        "directories": folders
+    })
+
+# clear session
+@bp.route("/reset_search", methods=["POST"])
+def reset_search():
+    session["searched_movies"] = []
+    session.modified = True
+    return "", 204
+
+# removes torrent and deletes movie folder
+@bp.route("/delete_folder/<folder>", methods=["POST"])
+def delete_folder(folder):
+    media_path = current_app.config['MEDIA_PATH']
+    folder_path = os.path.join(media_path, folder)
+
+    # Remove matching torrent from qBittorrent
+    qb_host = os.getenv("QBITTORRENT_HOST")
+    qb_user = os.getenv("QBITTORRENT_USER")
+    qb_pass = os.getenv("QBITTORRENT_PASS")
+
+    try:
+        s = requests.Session()
+        login = s.post(f"{qb_host}/api/v2/auth/login", data={"username": qb_user, "password": qb_pass})
+        if login.status_code == 200 and login.text == "Ok.":
+
+            torrents = s.get(f"{qb_host}/api/v2/torrents/info", params={"category": "media"}).json()
+            for torrent in torrents:
+                if folder.lower() in torrent["name"].lower():
+                    hash_ = torrent["hash"]
+                    s.post(f"{qb_host}/api/v2/torrents/delete", data={"hashes": hash_, "deleteFiles": "true"})
+                    break  # Stop after first match
+
+    except Exception as e:
+        current_app.logger.warning(f"Failed to remove torrent for {folder}: {e}")
+
+    # Delete the folder
+    if os.path.isdir(folder_path):
+        shutil.rmtree(folder_path, ignore_errors=True)
+        return "", 204
+
+    return "Folder not found", 404
