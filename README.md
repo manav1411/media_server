@@ -37,8 +37,13 @@ https://github.com/user-attachments/assets/9a0b5a3c-fd86-4828-afd7-acf520f5a459
 </details>
 
 
-## Architecture Overview
-<img width="3840" height="2432" alt="architecture" src="https://github.com/user-attachments/assets/8c49cb69-c1b4-4af8-8eec-934c0fe9466f" />
+## Architecture Component Diagram
+<img width="3840" height="2509" alt="architecture" src="https://github.com/user-attachments/assets/5e9613a4-44af-45d1-8043-6ab657648b97" />
+
+## Architecture Sequence Diagram
+<img width="7680" height="3124" alt="sequence" src="https://github.com/user-attachments/assets/9d113577-1d7d-4ec1-b13d-d465e757ee4e" />
+
+
 
 
 
@@ -138,8 +143,6 @@ pi is running on local IP http://192.168.0.134
 - Login is handled by Cloudflare Access.
 - Search and request movies from the homepage.
 
-## Architecture Diagram
-(TODO: diagram here, the flow between user → Cloudflare Access → Cloudflare Tunnel → NGINX → Flask → Jackett/qBittorrent n Media Files). Include cloudflare using google's API to authenticate
 
 ## Key Files & Components
 - server.py: Flask backend handling requests and user sessions
