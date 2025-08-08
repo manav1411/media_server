@@ -44,6 +44,23 @@ https://github.com/user-attachments/assets/9a0b5a3c-fd86-4828-afd7-acf520f5a459
 <img width="7680" height="3124" alt="sequence" src="https://github.com/user-attachments/assets/9d113577-1d7d-4ec1-b13d-d465e757ee4e" />
 
 
+## Tech Stack
+
+| Layer              | Tech          | Purpose                              |
+|--------------------|---------------------------|------------------------------------|
+| Hardware           | Raspberry Pi 400 + SSD    | Self-hosted media server              |
+| Backend Framework  | Python Flask              | Web server and API                    |
+| Web Server         | NGINX                     | Reverse proxy and static/media hosting |
+| Torrent Indexer    | Jackett                   | Torrent search aggregation            |
+| Torrent Client     | qBittorrent-nox           | Headless torrent downloading          |
+| Media Storage      | Mounted External SSD      | Storage for /media_library files      |
+| Domain & DNS       | Cloudflare                | DNS management, secure tunneling      |
+| Authentication     | Cloudflare Access + Google OAuth | Secure, email-based user login |
+| External APIs      | TMDb, OpenSubtitles, qBitorrent       | Movie metadata/poster, subtitles, movie files        |
+| Media Processing   | ffmpeg                    | Subtitle conversion (SRT → VTT)     |
+| Frontend           | HTML/CSS/JS               | Responsive UI and video player      |
+| Communication      | APIs                      | Backend interaction with services   |
+
 
 
 
