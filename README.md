@@ -1,8 +1,19 @@
 # SimplyServed - a Media Streaming Server
-A fully custom-built, privacy-first self-hosted media streaming platform with multi-user support, torrent automation, and personalised playback
+**Privacy-first, multi-user, self-hosted streaming platform with automated torrent downloads, real-time progress tracking, and personalized playback.**  
+live demo: [home.manavdodia.com](https://home.manavdodia.com). Please contact me on [Linkedin](https://www.linkedin.com/in/manav-dodia/) if you would like access for a demo.
+
 
 ## Overview
-SimplyServed is a self-hosted, privacy-first media streaming platform built entirely from scratch using Flask, NGINX, and torrent automation tools. It lets multiple authorised users remotely search, request, and stream movies seamlessly — with automatic torrent downloading, metadata fetching, subtitle support, and personalised playback progress tracking. Unlike off-the-shelf solutions like Plex or Jellyfin, SimplyServed is a full custom-built system that I designed end-to-end - demonstrating full-stack knowledge in backend architecture, media streaming, API integration, secure user access, software architecture, and networking.
+SimplyServed is a self-hosted, privacy-focused media streaming platform built entirely from scratch (Unlike off-the-shelf platforms like Plex or Jellyfin) using Flask, NGINX, Jackett, and Cloudflare Access. It enables multiple authorized users to remotely search, request, and stream movies seamlessly—with automatic torrent downloading, metadata fetching, subtitle support, and personalised playback progress tracking. This project particularly demonstrates expertise in software architecture, backend engineering, networking, API ingegration, security engineering, and end-to-end software design.\
+SimplyServed developed my hands-on experience across the full stack and infrastructure when implementing:
+- Designing and securing a multi-user streaming service
+- Integrating APIs for torrents (Jackett), metadata (TMDb), and subtitles (OpenSubtitles)
+- Automating torrent downloads and managing media files and subtitles
+- Real-time download and playback progress synchronization
+- Optimizing media streaming with HTTP byte-range support via NGINX
+- Implementing OAuth-based authentication with Cloudflare Access
+- Deploying and managing systemd services on a Linux home server
+- Building a responsive frontend with custom video controls
 
 
 ## Desktop Demo
@@ -35,6 +46,15 @@ https://github.com/user-attachments/assets/9a0b5a3c-fd86-4828-afd7-acf520f5a459
 <img width="7680" height="3124" alt="sequence" src="https://github.com/user-attachments/assets/9d113577-1d7d-4ec1-b13d-d465e757ee4e" />
 
 
+## How It Works - Example Flow 
+- User signs in, and searches for a movie → Flask calls TMDb for poster and metadata.  
+- Flask queries Jackett for torrent results, picks the best seeded.  
+- qBittorrent starts downloading automatically, with progress tracked in real-time.  
+- After download, media files (video, poster, subtitles) are saved and organized.  
+- Users can stream the movie remotely with subtitles and resume where they left off.  
+- Users can cancel requests to remove torrents and cleanup partial downloads, or similar from current media library.
+
+
 ## Tech Stack
 
 | Layer              | Tech          | Purpose                              |
@@ -46,7 +66,7 @@ https://github.com/user-attachments/assets/9a0b5a3c-fd86-4828-afd7-acf520f5a459
 | Torrent Client     | qBittorrent-nox           | Headless torrent downloading and management          |
 | Media Storage      | External SSD (Mounted)    | Storage for /media_library files      |
 | Domain & DNS       | Cloudflare                | DNS management, secure tunneling      |
-| Authentication     | Cloudflare Access + Google OAuth | Secure, email-based user login |
+| Authentication     | Cloudflare Access + Google OAuth | Secure, email-based user authentication |
 | External APIs      | TMDb (movie poster/metadata), OpenSubtitles (subtitle files), Jackett (torrent indexer aggregation) | Movie metadata/poster, subtitles, movie files |
 | Media Processing   | ffmpeg                    | Subtitle conversion (SRT → VTT)     |
 | Frontend           | HTML/CSS/JS               | Responsive UI and video player      |
@@ -81,6 +101,13 @@ README.md
 ```
 Media files are organized in /media_library, each movie in its own folder named after the movie, containing `movie.mp4`, `subtitles.vtt`, `metadata.json`, and `poster.jpg`.
 
+
+## Security & Privacy  
+- Access to the platform is strictly restricted via Cloudflare Access using Google OAuth, ensuring only authorized users can search, request, or stream content.
+- No data is shared with third-party streaming services; all media is stored locally on your own hardware.  
+- All sensitive API keys are stored in environment variables and never exposed to the frontend.
+
+
 ## Features
 - Movie Search and Request -> Users can search for movies using the TMDb API from the homepage.
 - Automated Torrent Download -> The most seeded torrent matching the search is automatically downloaded via Jackett + qBittorrent.
@@ -92,12 +119,14 @@ Media files are organized in /media_library, each movie in its own folder named 
 - Secure Access -> Restricts access to authorized users via Cloudflare Access.
 
 
-## Future Improvements
-- Add TV show and episodic content support with season/episode management.
-- Implement HLS adaptive streaming for smoother remote playback on slower networks.
-- Extra metadata such as trailers, cast info, reviews, etc.
-- support for other file formats other than mp4, such as mkv.
-- Improve subtitles accuracy by allowing user-selectable subtitle options and ability to offset timing.
+## Future Improvements - Contributions are welcome
+- Add TV show and episodic content support (to support series and binge-watching).
+- Implement HLS adaptive streaming for better performance on slower networks.
+- Include extra metadata like trailers, cast info, and reviews to enrich the user experience.
+- Support other file formats (e.g., mkv) to increase media compatibility.
+- Improve subtitles accuracy by enabling user-selectable options and timing offsets.
+- Add a user management UI to streamline access without Cloudflare email whitelist edits.
+- Enable searching/filtering within the media library for scalability.
 
 
 ## Key Files & Components
@@ -110,17 +139,11 @@ Media files are organized in /media_library, each movie in its own folder named 
 - .env: Environment variables including API keys
 
 
-## Contribution & Customization
-This project is designed as a personal learning and self-hosted system. Contributions and forks are welcome with the following notes:
-- Modify server.py to add new features or integrate other indexers.
-- Improve UI/UX and add additional metadata support.
-- Add TV shows, series support, or library search features.
-
-
 ## Setup and Running
-I do not expect many people to actually run this, it is moreso a demonstration of my skills. Nevertheless, if you are so inclined, the steps are below.
+I do not expect many people to actually run this, it is more so a demonstration of my skills. Nevertheless, if you are so inclined, the steps are below.
 
 ### Prerequisites:
+- Knowledge (or willingness to learn!): intermediate Linux skills, Python Flask, NGINX reverse proxy, torrent clients, and API key management.
 - Linux server (e.g. Raspberry Pi) with Python 3.x
 - Flask app and dependencies (see Python files)
 - NGINX configured as reverse proxy
@@ -137,11 +160,11 @@ sudo systemctl restart nginx            # NGINX reverse proxy on port 5000
 sudo systemctl restart jackett          # Torrent indexer on port 9117
 sudo systemctl restart qbittorrent-nox  # Torrent client on port 8080
 ```
-`SSH`-ing into your server is reccomended.
+Modify the .env.example file to modify env variables. `SSH`-ing into your server is recomended.
 
 ### Usage
 - Visit https://home.yourdomain.com
 - Log in via Cloudflare Access
 - Search or request movies from the homepage
-- Click a movie poster to stream with subtitles and resume playback support
+- Click a poster to stream with subtitles and resume playback support
 - Track download and playback progress in real time
