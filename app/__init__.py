@@ -7,7 +7,8 @@ progress_path = os.path.abspath(os.path.join(os.path.dirname(__file__), '.', 'us
 
 def create_app():
     app = Flask(__name__)
-    app.secret_key = os.getenv("FLASK_SECRET_KEY", "some-default-key")
+    default_secret = os.urandom(32)
+    app.secret_key = os.getenv("FLASK_SECRET_KEY", default_secret)
     app.config['MEDIA_PATH'] = media_path
     app.config['PROGRESS_PATH'] = progress_path
 
