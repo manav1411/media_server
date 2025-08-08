@@ -12,6 +12,25 @@ This project is a self-hosted, multi-user media streaming platform built from sc
 
 The platform is designed to be lightweight, privacy-respecting, and fully controlled by the user without reliance on commercial streaming solutions.
 
+
+## Desktop Demo
+
+https://github.com/user-attachments/assets/300dace1-8348-46d3-9c9b-a4cc17651930
+
+### Desktop Screenshots
+<img width="1440" height="900" alt="mac screenshot 1" src="https://github.com/user-attachments/assets/a4ad54f0-8d10-4d6a-a4fd-eb3c7b7ebbb1" />
+
+<img width="1440" height="900" alt="mac screenshot 2" src="https://github.com/user-attachments/assets/9fe0beaf-abb3-4343-be42-4f612116b68d" />
+
+### Mobile Demo
+
+https://github.com/user-attachments/assets/9a0b5a3c-fd86-4828-afd7-acf520f5a459
+
+### Mobile Screenshots
+<img width="402" height="874" alt="iphone screenshot 1" src="https://github.com/user-attachments/assets/d39f172b-56df-4588-be37-a22e810ed201" />
+
+<img width="402" height="874" alt="iphone screenshot 2" src="https://github.com/user-attachments/assets/ab776e3c-7f46-43cf-b10f-0934e512a227" />
+
 ## Architecture Overview
 Components:
 - Flask Backend Server
