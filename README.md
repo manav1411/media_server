@@ -3,19 +3,6 @@
 live demo: [home.manavdodia.com](https://home.manavdodia.com). Please contact me on [Linkedin](https://www.linkedin.com/in/manav-dodia/) if you would like access for a demo.
 
 
-## Overview
-SimplyServed is a self-hosted, privacy-focused media streaming platform built entirely from scratch (Unlike off-the-shelf platforms like Plex or Jellyfin) using Flask, NGINX, Jackett, and Cloudflare Access. It enables multiple authorized users to remotely search, request, and stream movies seamlessly—with automatic torrent downloading, metadata fetching, subtitle support, and personalised playback progress tracking. This project particularly demonstrates expertise in software architecture, backend engineering, networking, API ingegration, security engineering, and end-to-end software design.\
-SimplyServed developed my hands-on experience across the full stack and infrastructure when implementing:
-- Designing and securing a multi-user streaming service
-- Integrating APIs for torrents (Jackett), metadata (TMDb), and subtitles (OpenSubtitles)
-- Automating torrent downloads and managing media files and subtitles
-- Real-time download and playback progress synchronization
-- Optimizing media streaming with HTTP byte-range support via NGINX
-- Implementing OAuth-based authentication with Cloudflare Access
-- Deploying and managing systemd services on a Linux home server
-- Building a responsive frontend with custom video controls
-
-
 ## Desktop Demo
 
 https://github.com/user-attachments/assets/300dace1-8348-46d3-9c9b-a4cc17651930
@@ -44,6 +31,19 @@ https://github.com/user-attachments/assets/9a0b5a3c-fd86-4828-afd7-acf520f5a459
 
 ## Architecture Sequence Diagram
 <img width="7680" height="3124" alt="sequence" src="https://github.com/user-attachments/assets/9d113577-1d7d-4ec1-b13d-d465e757ee4e" />
+
+
+## Overview
+SimplyServed is a self-hosted, privacy-focused media streaming platform built entirely from scratch (Unlike off-the-shelf platforms like Plex or Jellyfin) using Flask, NGINX, Jackett, and Cloudflare Access. It enables multiple authorized users to remotely search, request, and stream movies seamlessly—with automatic torrent downloading, metadata fetching, subtitle support, and personalised playback progress tracking. This project particularly demonstrates expertise in software architecture, backend engineering, networking, API ingegration, security engineering, and end-to-end software design.\
+SimplyServed developed my hands-on experience across the full stack and infrastructure when implementing:
+- Designing and securing a multi-user streaming service
+- Integrating APIs for torrents (Jackett), metadata (TMDb), and subtitles (OpenSubtitles)
+- Automating torrent downloads and managing media files and subtitles
+- Real-time download and playback progress synchronization
+- Optimizing media streaming with HTTP byte-range support via NGINX
+- Implementing OAuth-based authentication with Cloudflare Access
+- Deploying and managing systemd services on a Linux home server
+- Building a responsive frontend with custom video controls
 
 
 ## How It Works - Example Flow 
