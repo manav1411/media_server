@@ -315,33 +315,6 @@ h1 {
     background: #c0392b;
 }
 
-/* Responsive tweaks */
-@media (max-width: 600px) {
-  
-    .movies {
-      padding: 0 calc((100vw - 300px - 40px) / 2);
-      justify-content: flex-start;
-    }
-
-  
-    .movie-block {
-    width: 28%;
-    min-width: 100px;
-    max-width: none;
-  }
-
-  .movie {
-    width: 100%;
-  }
-
-  .movie-info {
-    font-size: 13px;
-    padding: 0px;
-    text-align: justify;
-    width: 100%;
-  }
-
-}
 
 .cancel-wrapper {
     position: absolute;
@@ -431,4 +404,60 @@ progress::-moz-progress-bar {
   padding: 5px 8px;
   border-radius: 25px;
   cursor: pointer;
+}
+
+
+/* Responsive tweaks */
+@media (max-width: 600px) {
+  
+    .movies {
+      padding: 0 calc((100vw - 300px - 40px) / 2);
+      justify-content: flex-start;
+    }
+
+  
+    .movie-block {
+    width: 28%;
+    min-width: 100px;
+    max-width: none;
+  }
+
+  .movie {
+    width: 100%;
+  }
+
+  .movie-info {
+    font-size: 13px;
+    padding: 0px;
+    text-align: justify;
+    width: 100%;
+  }
+
+  .search-container {
+    max-width: 600px;
+    margin: 0 auto 70px;
+    display: flex;
+    gap: 10px;
+    justify-content: center;
+}
+
+
+#controls-panel {
+  bottom: 60px;
+  right: 20px;
+  left: 0;
+  right: 0;
+  width: auto;
+  max-width: 100%;
+  border-radius: 25px;
+  padding: 5px;
+  margin: 0;
+  box-sizing: border-box;
+}
+
+#controls-toggle {
+  bottom: 5px;
+  right: 5px;
+  padding: 5px 6px;
+}
 }

@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <link rel="stylesheet" href="{{ url_for('static', filename='global.css') }}?v=10">
+    <link rel="stylesheet" href="{{ url_for('static', filename='global.css') }}?v=22">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Home</title>
 </head>
@@ -46,10 +46,16 @@
       </div>
     </div>
 
+    <div id="search-status" style="display:none; text-align:center; margin-top:10px; font-weight:bold;">
+      Searching for your movie...
+    </div>
     <!-- TMDb SEARCH-->
     {% if searched_movies|length == 0 %}
     <div class="search-wrapper bottom-search">
       <div class="search-container">
+        <div id="search-status" style="display:none; text-align:center; margin-top:10px; font-weight:bold;">
+          Searching for your movie...
+        </div>
         <form method="POST" action="/">
           <input type="text" name="query" placeholder="request a movie..." required>
           <button type="submit">Search</button>
@@ -60,6 +66,9 @@
     <div class="search-wrapper top-search">
       <div class="search-container">
         <form method="POST" action="/">
+          <div id="search-status" style="display:none; text-align:center; margin-top:10px; font-weight:bold;">
+            Searching for your movie...
+          </div>
           <input type="text" name="query" placeholder="request a movie..." required>
           <button type="submit">Search</button>
         </form>
@@ -304,6 +313,24 @@
           fetch(`/delete_folder/${encodeURIComponent(folder)}`, { method: "POST" })
             .then(() => location.reload());
         }
+      }
+    });
+  </script>
+
+  <script>
+    document.addEventListener("DOMContentLoaded", () => {
+      const form = document.querySelector(".search-container form");
+      const statusDiv = document.getElementById("search-status");
+
+      if (form && statusDiv) {
+        form.addEventListener("submit", () => {
+          // Show the searching message
+          statusDiv.style.display = "block";
+
+          // Optionally disable the search button to prevent multiple submits
+          const button = form.querySelector("button[type='submit']");
+          if (button) button.disabled = true;
+        });
       }
     });
   </script>
