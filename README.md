@@ -38,6 +38,10 @@ https://github.com/user-attachments/assets/9a0b5a3c-fd86-4828-afd7-acf520f5a459
 
 
 ## Architecture Overview
+<img width="3840" height="2432" alt="architecture" src="https://github.com/user-attachments/assets/8c49cb69-c1b4-4af8-8eec-934c0fe9466f" />
+
+
+
 Components:
 - Flask Backend Server
   - Serves the web frontend
